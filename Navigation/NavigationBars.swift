@@ -20,7 +20,10 @@ import SwiftUI
 //    }
 //}
 
+// You can also allow for the navigation bar to be renamed -> if you're using the .inline title display mode, you can also pass a binding to navigationTitle() which will allow you to rename the title
 struct NavigationBars: View {
+    @State private var title = "SwiftUI"
+    
     var body: some View {
         NavigationStack {
             Text("Hello, world!")
@@ -35,7 +38,10 @@ struct NavigationBars: View {
                             // new button action here
                         }
                     }
+                    
                 }
+                .navigationTitle($title)
+                .navigationBarTitleDisplayMode(.inline)
         // Placements include:
             // .confirmationAction -> when you want users to agree to something, such as agreeing to terms of service
             // .destructiveAction -> when users need to make a choice to destroy whatever it is they are working with -> a confirmation to remove data will be created
