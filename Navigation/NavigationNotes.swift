@@ -64,19 +64,72 @@ struct DetailView: View {
     }
 }
 
-struct NavigationNotes: View {
-    @State private var randomPath = [Int]()
-//    @State private var path = NavigationPath()
-    @State private var path = [Int]()
-    
-    var body: some View {
-        NavigationStack(path: $path) {
-            RandomView(path: $path, number: 0)
-                .navigationDestination(for: Int.self) { i in
-                    RandomView(path: $path, number: i)
-                }
+// Saving and Loading the Navigation Stack Path using COdable
+// 1. If you use NavigationPath to store the active path of your NavigationStack, SwiftUI provides two helpers to make saving and loading easier
+// 2. If you're using a homogenous array, then you don't need those helpers and can load / save data freely
+
+@Observable
+class PathStore {
+    // If you're using NavigationPath -> you need four small changes
+    // First, the property needs to have type NavigationPath rather than [Int]
+    // var path: NavigationPath {
+    var path: [Int] {
+        didSet {
+            save()
+        }
+    }
+
+    private let savePath = URL.documentsDirectory.appending(path: "SavedPath")
+
+    init() {
+        if let data = try? Data(contentsOf: savePath) {
+            // Second, when we decode our JSON in the initializer, we need to decode to a specific type and then use the decoded data to create a new NavigationPath
+//            if let decoded = try? JSONDecoder().decode(NavigationPath.CodableRepresentation.self, from: data) {
+//                path = NavigationPath(decoded)
+//                return
+//            }
+            if let decoded = try? JSONDecoder().decode([Int].self, from: data) {
+                path = decoded
+                return
+            }
         }
 
+        // Third, if decoding fials, we should assign a new, empty NavigationPath instead of an empty array
+        // path = NavigationPath()
+        path = []
+    }
+
+    // Fourth, the save() method needs to write the Codable representation of the navigation path
+    // NavigationPath doesn't require its data types to conform to Codable - it only needs Hashable
+    // As a result, Swift can't verify at compile time that there is a valid Codable representation of the navigation path, so you need to request it and see what comes back
+    func save() {
+        // guard let representation = path.codable else { return }
+        // This will either return the data ready to be encoded to JSON or return nil if at least one object in the path cannot be encoded
+        do {
+            // Finally, we convert that Codable representation into JSON instead of the original Int array
+            // let data = try JSONEncoder().encode(representation)
+            let data = try JSONEncoder().encode(path)
+            try data.write(to: savePath)
+        } catch {
+            print("Failed to save navigation data")
+        }
+    }
+}
+
+struct NavigationNotes: View {
+    //    @State private var path = NavigationPath()
+    @State private var randomPath = [Int]()
+    @State private var path = [Int]()
+    @State private var pathStore = PathStore()
+
+    var body: some View {
+        NavigationStack(path: $pathStore.path) {
+            DetailView(number: 0)
+                .navigationDestination(for: Int.self) { i in
+                    DetailView(number: i)
+                }
+        }
+    }
         
 //        NavigationStack(path: $path) {
 //            RandomView(number: 0)
@@ -131,8 +184,6 @@ struct NavigationNotes: View {
 //                Text("You selected \(selection)")
 //            }
 //        }
-
-    }
 }
 
 #Preview {
