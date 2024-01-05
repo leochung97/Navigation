@@ -64,7 +64,7 @@ struct DetailView: View {
     }
 }
 
-// Saving and Loading the Navigation Stack Path using COdable
+// Saving and Loading the Navigation Stack Path using Codable
 // 1. If you use NavigationPath to store the active path of your NavigationStack, SwiftUI provides two helpers to make saving and loading easier
 // 2. If you're using a homogenous array, then you don't need those helpers and can load / save data freely
 
